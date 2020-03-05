@@ -1,10 +1,10 @@
-#Movie recommender
+# Movie recommender
 
-##Installation
+## Installation
 1. Create a new conda environment: `conda create --name movie-recommendator`
 2. Install the requirements: `conda install --file requirements.txt`
 
-##Downloading the datastets
+## Downloading the datastets
 Since the datasets are quite large, I cannot include them into this repository. You can however install them easily.
 
 The datasets can be downloaded here:
