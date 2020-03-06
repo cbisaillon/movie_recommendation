@@ -24,10 +24,10 @@ def loadMovies():
     """
 
     data = pd.read_csv(file_path)
-    movies = {}
+    movies = []
 
     for i, row in data.iterrows():
         movie = Movie(row['movieId'], row['title'], row['genres'].split('|'))
-        movies[row['movieId']] = movie
+        movies.append(movie)
 
     return movies

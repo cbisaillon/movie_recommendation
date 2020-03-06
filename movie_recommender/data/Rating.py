@@ -11,4 +11,4 @@ def loadRatings():
     """
 
     data = pd.read_csv(file_path)
-    return data.to_records()
+    return data
