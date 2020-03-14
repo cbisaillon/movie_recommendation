@@ -1,6 +1,8 @@
 import pandas as pd
+import os
 
-file_path = "../big_files/ml-25m/ratings.csv"
+script_path = os.path.dirname(__file__)
+file_path = os.path.join(script_path, "../big_files/ml-25m/ratings.csv")
 
 
 def loadRatings():
