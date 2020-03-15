@@ -13,7 +13,7 @@ not_rated_number = -1
 def buildUserMovieMatrix(movies: pd.DataFrame, ratings: pd.DataFrame, movieId2Idx):
     print("Building user-movie matrix...")
     users = ratings.userId.unique()[:max_users]
-    matrix = np.full((len(users), len(movies)), not_rated_number)
+    matrix = np.full((len(users), len(movies)), not_rated_number, dtype=np.byte)
 
     for userRowIdx, userId in enumerate(users):
         ratings_for_user = ratings[ratings['userId'] == userId]
@@ -21,6 +21,8 @@ def buildUserMovieMatrix(movies: pd.DataFrame, ratings: pd.DataFrame, movieId2Id
             movie_idx = int(movieId2Idx[rating['movieId']])
             rating_val = int(rating['rating'])
             matrix[userRowIdx][movie_idx] = rating_val
+
+
 
     print("Saving user movie matrix")
     np.save(matrix_save_loc, matrix)
@@ -56,6 +58,7 @@ class UserBasedRecommender:
             # If all of the closest users have not rated this movie, skip
             if np.array_equal(self.userMovieMat[closest_users, movieIdx], no_rating_mat):
                 continue
+
             # If the user already rated this movie, skip
             if user_ratings[movieIdx] != not_rated_number:
                 continue

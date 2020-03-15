@@ -20,5 +20,7 @@ WORKDIR /app
 
 ENV PORT 8080
 
-CMD exec python downloadBigFiles.py
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 app:webapp
+ADD http://files.grouplens.org/datasets/movielens/ml-25m.zip big_files/ml-25m.zip
+RUN unzip big_files/ml-25m.zip -d big_files/
+
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 'app:getWebApp()'

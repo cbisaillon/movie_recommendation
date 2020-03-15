@@ -18,6 +18,7 @@ userMovie2Rating = {}
 learning_rate = 0.001
 weight_decay = 0.00001
 n_epochs = 100
+max_recommendations = 100000
 
 script_dir = os.path.dirname(__file__)
 movie_poster_dir = os.path.join(script_dir, "data/posters")
@@ -58,7 +59,7 @@ class Main:
         self.movies, self.movieId2Idx, self.movieIdx2Id = loadMovies()
 
         print("Loading ratings")
-        self.ratings = loadRatings()
+        self.ratings = loadRatings(max_recommendations)
 
         self.recommender = UserBasedRecommender(self.movies, self.ratings, self.movieId2Idx)
 
@@ -77,6 +78,7 @@ class Main:
 
     def runServer(self):
         webapp.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+        return webapp
 
 
 def oldMethod(users, movies, ratings, movie_id_to_index):
@@ -112,6 +114,11 @@ def oldMethod(users, movies, ratings, movie_id_to_index):
             total_loss = 0
 
         i += 1
+
+
+def getWebApp():
+    main = Main()
+    return main.runServer()
 
 
 if __name__ == "__main__":
