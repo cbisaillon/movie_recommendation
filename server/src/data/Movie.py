@@ -46,7 +46,7 @@ def loadMovies():
 
     for movieId in movies['movieId']:
         if not movieId in movieId2Idx.keys():
-            movieId2Idx[movieId] = len(movieId2Idx.keys())
+            movieId2Idx[int(movieId)] = len(movieId2Idx.keys())
             movieIdx2Id.append(movieId)
 
     return movies, movieId2Idx, movieIdx2Id

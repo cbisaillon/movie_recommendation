@@ -5,12 +5,12 @@ import torch
 import numpy as np
 from methods.network.Recommender import NetworkRecommender
 from methods.collaborative.user_based import UserBasedRecommender
-from flask import Flask
+from flask import Flask, request
 import os
 
 import torch.nn as nn
 import torch.optim as optim
-from web.routes import index_page
+import json
 
 identifier = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 device = torch.device(identifier)
@@ -22,34 +22,61 @@ n_epochs = 100
 script_dir = os.path.dirname(__file__)
 movie_poster_dir = os.path.join(script_dir, "data/posters")
 
+main = None
 
 webapp = Flask(__name__)
-webapp.register_blueprint(index_page)
 
-def main():
-    print("Loading movies")
-    movies, movieId2Idx, movieIdx2Id = loadMovies()
-    print("Loading ratings")
-    ratings = loadRatings()
 
-    # if not os.path.isdir(movie_poster_dir):
-    #     print("Downloading movie posters... It will take a long time !")
-    #     # os.makedirs(movie_poster_dir)
-    #     downloadPosters(movies)
+@webapp.route('/')
+def index():
+    # Get the ratings in the url
+    user_ratings = request.args.get('ratings')
+    if user_ratings:
+        return processQuery(user_ratings)
+    else:
+        return "You have to specify your movie ratings in the following format: {movieId1}:{rating1},{movieId2}:{rating2},..."
 
-    user_ratings = np.full((len(movies)), -1)
-    user_ratings[0] = 5
-    user_ratings[100] = 1
-    # user_ratings = np.random.randint(0, 5, (len(movies)))
 
-    recommender = UserBasedRecommender(movies, ratings, movieId2Idx)
+def processQuery(query):
+    user_ratings = query.split(',')
+    movie_score = {}
+    for rating in user_ratings:
+        movie_id = int(rating.split(":")[0])
+        score = int(rating.split(":")[1])
 
-    webapp.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+        if not movie_id in movie_score.keys():
+            movie_score[movie_id] = score
 
-    # recommendations = recommender.recommend(user_ratings)
-    # recommendation_names = movies.loc[movies['movieId'].isin(recommendations)]['title']
-    #
+    # Send the data for recommendation
+    return json.dumps(main.getRecommendation(movie_score))
 
+
+class Main:
+
+    def __init__(self):
+        print("Loading movies")
+        self.movies, self.movieId2Idx, self.movieIdx2Id = loadMovies()
+
+        print("Loading ratings")
+        self.ratings = loadRatings()
+
+        self.recommender = UserBasedRecommender(self.movies, self.ratings, self.movieId2Idx)
+
+    def getRecommendation(self, ratings):
+        user_rating_mat = np.full((len(self.movies)), -1)
+
+        # Build the user's rating matrix
+        for movieId, score in ratings.items():
+            movieIdx = self.movieId2Idx[movieId]
+            user_rating_mat[movieIdx] = score
+
+        recommendations = self.recommender.recommend(user_rating_mat)
+        recommendation_names = self.movies.loc[self.movies['movieId'].isin(recommendations)]['title']
+
+        return recommendation_names.tolist()
+
+    def runServer(self):
+        webapp.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
 
 
 def oldMethod(users, movies, ratings, movie_id_to_index):
@@ -90,5 +117,5 @@ def oldMethod(users, movies, ratings, movie_id_to_index):
 if __name__ == "__main__":
     argv = sys.argv
 
-    # todo: Parse arguments
-    main()
+    main = Main()
+    main.runServer()
