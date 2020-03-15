@@ -50,8 +50,17 @@ class UserBasedRecommender:
         mean_rating = np.mean(user_ratings[user_ratings != not_rated_number])
 
         suggestion_score = np.full((user_ratings.shape[0]), not_rated_number)
+        no_rating_mat = np.full((nb_recommendations), not_rated_number)
 
         for movieIdx in range(user_ratings.shape[0]):
+            # If all of the closest users have not rated this movie, skip
+            if np.array_equal(self.userMovieMat[closest_users, movieIdx], no_rating_mat):
+                continue
+            # If the user already rated this movie, skip
+            if user_ratings[movieIdx] != not_rated_number:
+                continue
+
+
             summation_numerator = 0.0
             summation_denominator = 0.0
 
