@@ -1,5 +1,5 @@
 /.idea/
-/big_files/ml-25m/
+/server/src/big_files/ml-25m/
 /server/src/data/posters/
 /server/src/big_files/
 /server/miniconda3.sh

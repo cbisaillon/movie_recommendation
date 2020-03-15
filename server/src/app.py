@@ -1,15 +1,16 @@
 import sys
-from server.src.data.Movie import loadMovies, downloadPosters
-from server.src.data.Rating import loadRatings
+from data.Movie import loadMovies
+from data.Rating import loadRatings
 import torch
 import numpy as np
-from server.src.methods.network.Recommender import NetworkRecommender
-from server.src.methods.collaborative.user_based import UserBasedRecommender
-from server.src.web import webapp
+from methods.network.Recommender import NetworkRecommender
+from methods.collaborative.user_based import UserBasedRecommender
+from flask import Flask
 import os
 
 import torch.nn as nn
 import torch.optim as optim
+from web.routes import index_page
 
 identifier = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 device = torch.device(identifier)
@@ -22,16 +23,19 @@ script_dir = os.path.dirname(__file__)
 movie_poster_dir = os.path.join(script_dir, "data/posters")
 
 
+webapp = Flask(__name__)
+webapp.register_blueprint(index_page)
+
 def main():
     print("Loading movies")
     movies, movieId2Idx, movieIdx2Id = loadMovies()
     print("Loading ratings")
     ratings = loadRatings()
 
-    if not os.path.isdir(movie_poster_dir):
-        print("Downloading movie posters... It will take a long time !")
-        # os.makedirs(movie_poster_dir)
-        downloadPosters(movies)
+    # if not os.path.isdir(movie_poster_dir):
+    #     print("Downloading movie posters... It will take a long time !")
+    #     # os.makedirs(movie_poster_dir)
+    #     downloadPosters(movies)
 
     user_ratings = np.full((len(movies)), -1)
     user_ratings[0] = 5
@@ -40,7 +44,7 @@ def main():
 
     recommender = UserBasedRecommender(movies, ratings, movieId2Idx)
 
-    webapp.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+    webapp.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
 
     # recommendations = recommender.recommend(user_ratings)
     # recommendation_names = movies.loc[movies['movieId'].isin(recommendations)]['title']
