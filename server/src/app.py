@@ -6,11 +6,14 @@ import numpy as np
 from methods.network.Recommender import NetworkRecommender
 from methods.collaborative.user_based import UserBasedRecommender
 from flask import Flask, request
+from flask_cors import CORS
 import os
 
 import torch.nn as nn
 import torch.optim as optim
 import json
+import cProfile
+
 
 identifier = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 device = torch.device(identifier)
@@ -25,8 +28,11 @@ movie_poster_dir = os.path.join(script_dir, "data/posters")
 
 main = None
 
-webapp = Flask(__name__)
+pr = cProfile.Profile()
+pr.enable()
 
+webapp = Flask(__name__)
+CORS(webapp)
 
 @webapp.route('/')
 def index():
@@ -36,6 +42,26 @@ def index():
         return processQuery(user_ratings)
     else:
         return "You have to specify your movie ratings in the following format: {movieId1}:{rating1},{movieId2}:{rating2},..."
+
+@webapp.route('/list')
+def listMovies():
+
+    page = int(request.args.get('page'))
+    per_page = 20
+
+    movies = main.movies
+    nbMovies = len(movies)
+
+    start = (page - 1) * per_page
+    end = page * per_page
+
+    if start < 0:
+        start = 0
+
+    if end > nbMovies:
+        end = nbMovies - 1
+
+    return json.dumps(dict([(id, title) for id, title in zip(movies[start:end].movieId, movies[start:end].title)]))
 
 
 def processQuery(query):
@@ -64,7 +90,7 @@ class Main:
         self.recommender = UserBasedRecommender(self.movies, self.ratings, self.movieId2Idx)
 
     def getRecommendation(self, ratings):
-        user_rating_mat = np.full((len(self.movies)), -1)
+        user_rating_mat = np.full((len(self.movies)), -1, dtype=np.byte)
 
         # Build the user's rating matrix
         for movieId, score in ratings.items():
@@ -77,7 +103,7 @@ class Main:
         return recommendation_names.tolist()
 
     def runServer(self):
-        webapp.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+        webapp.run(threaded=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
         return webapp
 
 
@@ -116,13 +142,11 @@ def oldMethod(users, movies, ratings, movie_id_to_index):
         i += 1
 
 
-def getWebApp():
-    main = Main()
-    return main.runServer()
-
-
 if __name__ == "__main__":
     argv = sys.argv
 
     main = Main()
     main.runServer()
+
+pr.disable()
+pr.print_stats(sort="calls")

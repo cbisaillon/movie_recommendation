@@ -4,3 +4,4 @@
 /server/src/big_files/
 /server/miniconda3.sh
 /server/src/methods/collaborative/matrices/user_based.npy
+/server/cloudbuild.yaml

@@ -12,6 +12,6 @@ def loadRatings(max_recommendations):
     :return: the list of rating in the dataset
     """
 
-    data = pd.read_csv(file_path)[:max_recommendations]
+    data = pd.read_csv(file_path, nrows=max_recommendations)
 
     return data

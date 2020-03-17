@@ -3,10 +3,10 @@ import numpy as np
 import os
 from scipy import spatial
 
-dirname = os.path.dirname(__file__)
+dirname = os.path.dirname(os.path.realpath(__file__))
 
 max_users = 500
-matrix_save_loc = os.path.join(dirname, "matrices/user_based")
+matrix_save_loc = os.path.join(dirname,"matrices/user_based")
 not_rated_number = -1
 
 
@@ -21,8 +21,6 @@ def buildUserMovieMatrix(movies: pd.DataFrame, ratings: pd.DataFrame, movieId2Id
             movie_idx = int(movieId2Idx[rating['movieId']])
             rating_val = int(rating['rating'])
             matrix[userRowIdx][movie_idx] = rating_val
-
-
 
     print("Saving user movie matrix")
     np.save(matrix_save_loc, matrix)
@@ -51,8 +49,8 @@ class UserBasedRecommender:
         # Find items that those users have rated but I have not
         mean_rating = np.mean(user_ratings[user_ratings != not_rated_number])
 
-        suggestion_score = np.full((user_ratings.shape[0]), not_rated_number)
-        no_rating_mat = np.full((nb_recommendations), not_rated_number)
+        suggestion_score = np.full((user_ratings.shape[0]), not_rated_number, dtype=np.byte)
+        no_rating_mat = np.full((nb_recommendations), not_rated_number, dtype=np.byte)
 
         for movieIdx in range(user_ratings.shape[0]):
             # If all of the closest users have not rated this movie, skip
@@ -63,13 +61,13 @@ class UserBasedRecommender:
             if user_ratings[movieIdx] != not_rated_number:
                 continue
 
-
             summation_numerator = 0.0
             summation_denominator = 0.0
 
             for similarity, userId in zip(similarities, closest_users):
                 summation_denominator += similarity
-                summation_numerator += (similarity * (self.userMovieMat[userId][movieIdx] - np.mean(self.userMovieMat[userId])))
+                summation_numerator += (
+                            similarity * (self.userMovieMat[userId][movieIdx] - np.mean(self.userMovieMat[userId])))
 
             suggestion_score[movieIdx] = mean_rating + summation_numerator / summation_denominator
 
