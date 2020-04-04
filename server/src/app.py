@@ -46,10 +46,16 @@ def index():
 @webapp.route('/list')
 def listMovies():
 
-    page = int(request.args.get('page'))
+    page = request.args.get('page')
+    if page is None:
+        page = 1
+    else:
+        page = int(page)
+
     per_page = 20
 
-    movies = main.movies
+    movies = main.movies[main.movies['average_score'].notna()]
+    movies = movies.sort_values(by=['average_score'], ascending=False)
     nbMovies = len(movies)
 
     start = (page - 1) * per_page
@@ -87,6 +93,10 @@ class Main:
         print("Loading ratings")
         self.ratings = loadRatings(max_recommendations)
 
+        print("Computing average score for each movies")
+
+        self.movies['average_score'] = self.movies.apply(lambda row: (self.ratings[self.ratings['movieId'] == row['movieId']])['rating'].sum(), axis=1)
+
         self.recommender = UserBasedRecommender(self.movies, self.ratings, self.movieId2Idx)
 
     def getRecommendation(self, ratings):
@@ -94,6 +104,7 @@ class Main:
 
         # Build the user's rating matrix
         for movieId, score in ratings.items():
+            # print(movieId)
             movieIdx = self.movieId2Idx[movieId]
             user_rating_mat[movieIdx] = score
 

@@ -5,3 +5,4 @@
 /server/miniconda3.sh
 /server/src/methods/collaborative/matrices/user_based.npy
 /server/cloudbuild.yaml
+/server/src/how_to_send

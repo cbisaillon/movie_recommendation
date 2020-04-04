@@ -9,6 +9,10 @@ max_users = 500
 matrix_save_loc = os.path.join(dirname,"matrices/user_based")
 not_rated_number = -1
 
+# When Night Is Falling (1995)
+# House Arrest (1996)
+# My Kingdom (2001)
+# I Don't Want to Talk About It (De eso no se habla) (1993)
 
 def buildUserMovieMatrix(movies: pd.DataFrame, ratings: pd.DataFrame, movieId2Idx):
     print("Building user-movie matrix...")
@@ -38,13 +42,18 @@ class UserBasedRecommender:
         else:
             self.userMovieMat = buildUserMovieMatrix(movies, ratings, moviesId2Idx)
 
+        # print(self.userMovieMat)
+
         self.user_movie_tree = spatial.KDTree(self.userMovieMat)
 
-    def recommend(self, user_ratings, nb_recommendations=5):
+    def recommend(self, user_ratings, nb_recommendations=10):
         print("Making recommendations...")
 
         # Find the closest user based on the rating of the user
         similarities, closest_users = self.user_movie_tree.query(user_ratings, nb_recommendations)
+        # print(similarities, closest_users)
+        # print(user_ratings.shape, np.where(user_ratings != -1)[0])
+        # print(self.userMovieMat[closest_users[0]].shape, np.where(self.userMovieMat[closest_users[0]] != -1)[0])
 
         # Find items that those users have rated but I have not
         mean_rating = np.mean(user_ratings[user_ratings != not_rated_number])

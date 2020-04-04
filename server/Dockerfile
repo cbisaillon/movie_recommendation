@@ -18,7 +18,6 @@ COPY . /opt/app
 COPY src/ /app
 WORKDIR /app
 
-
 ADD http://files.grouplens.org/datasets/movielens/ml-25m.zip big_files/ml-25m.zip
 RUN unzip big_files/ml-25m.zip -d big_files/
 
