@@ -1,4 +1,5 @@
 # Movie recommender
+In this project, I created a movie recommendation algorithm. 
 
 ## Installation
 1. Create a new conda environment: `conda create --name movie-recommendator`
